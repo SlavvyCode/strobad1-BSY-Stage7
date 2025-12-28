@@ -17,7 +17,8 @@ def on_message(client, userdata, msg):
                 print(f"[SYSTEM]: Successfully copied binary file: {filename}")
             except Exception as e:
                 print(f"[SYSTEM]: Error decoding binary file: {e}")
-
+        else:
+            print(f"[RESPONSE]: {clean_payload}")
 if __name__ == '__main__':
     client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
     client.on_message = on_message
