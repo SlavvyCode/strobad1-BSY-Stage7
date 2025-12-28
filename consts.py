@@ -2,3 +2,12 @@ BROKER = "147.32.82.209"
 PORT = 1883
 TOPIC = "sensors"
 BOT_ID = "strobad1"
+
+
+CMD_ANNOUNCE_BOT = "botStatus"
+CMD_LIST_FILES = "ls"
+CMD_ID_HOST = "id"
+CMD_WHO_IS_LOGGED_IN = "w"
+CMD_GET_FILE_CONTENT = "cat"
+
+

