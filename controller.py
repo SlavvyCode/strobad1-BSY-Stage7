@@ -1,3 +1,4 @@
+import time
 import paho.mqtt.client as mqtt
 
 BROKER = "147.32.82.209"
@@ -7,8 +8,31 @@ TOPIC = "sensors"
 client = mqtt.Client()
 client.connect(BROKER, PORT)
 
-# Requirement 5.1: The controller "asks" if bots are present
-print("Sending ping to bots...")
-client.publish(TOPIC, "PING_QUERY")
+# This runs whenever the bot sends a response back to the 'sensors' topic
+def on_message(client, userdata, msg):
+    print(f"\n[RESPONSE FROM BOT]:\n{msg.payload.decode()}")
 
-client.disconnect()
+
+
+if __name__ == '__main__':
+    client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+    client.on_message = on_message
+    client.connect(BROKER, PORT)
+    client.subscribe(TOPIC)
+    # loop_start() required over loop_forever() to allow sending commands
+    client.loop_start()
+    print("Controller is ready. Type a command (e.g., 'id', 'w', 'ping'):")
+    try:
+        while True:
+            cmd = input("> ")
+            if cmd.lower() == "exit":
+                break
+            # Send the command to the broker
+            client.publish(TOPIC, cmd)
+            # Give bot time to respond
+            time.sleep(1)
+    except KeyboardInterrupt:
+        pass
+    client.loop_stop()
+    client.disconnect()
+
