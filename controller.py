@@ -1,17 +1,17 @@
 import time
 import paho.mqtt.client as mqtt
+from consts import *
 
-BROKER = "147.32.82.209"
-PORT = 1883
-TOPIC = "sensors"
 
 client = mqtt.Client()
 client.connect(BROKER, PORT)
 
 # This runs whenever the bot sends a response back to the 'sensors' topic
 def on_message(client, userdata, msg):
-    print(f"\n[RESPONSE FROM BOT]:\n{msg.payload.decode()}")
-
+    #accept messages taht go lik this : f"{BOT_ID}_RES:
+    payload = msg.payload.decode()
+    if payload.startswith(f"{BOT_ID}_RES:") or payload.startswith(f"{BOT_ID}_ERR:"):
+        print(f"[BOT RESPONSE]: {payload}")
 
 
 if __name__ == '__main__':
@@ -28,6 +28,7 @@ if __name__ == '__main__':
             if cmd.lower() == "exit":
                 break
             # Send the command to the broker
+            client.publish(TOPIC, f"{BOT_ID}:{cmd}")
             client.publish(TOPIC, cmd)
             # Give bot time to respond
             time.sleep(1)
