@@ -9,11 +9,8 @@ def on_message(client, userdata, msg):
     payload = msg.payload.decode()
     if payload.startswith(f"{BOT_ID}_RES:"):
         clean_payload = payload.replace(f"{BOT_ID}_RES: ", "")
-
-        # 1. Handle Binary File Copy (Requirement 5.5)
         if "FILE_B64:" in clean_payload:
             try:
-                # Based on your bot's format: FILE_B64:filename:data
                 _, filename, b64data = clean_payload.split(":", 2)
                 with open(f"copied_{filename}", "wb") as f:
                     f.write(base64.b64decode(b64data))
