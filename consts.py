@@ -1,8 +1,11 @@
 BROKER = "147.32.82.209"
 PORT = 1883
 TOPIC = "sensors"
-BOT_ID = "strobad1"
-STEALTH_ID = "FW-WSL-0992-A"
+
+CONTROLLER_ID ="GW-MASTER-01"
+BOT_ID = "SNSR-UNIT-77"
+
+DATA_KEY = "data"
 
 
 CMD_ANNOUNCE_BOT = "botStatus"

