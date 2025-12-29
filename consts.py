@@ -2,6 +2,7 @@ BROKER = "147.32.82.209"
 PORT = 1883
 TOPIC = "sensors"
 BOT_ID = "strobad1"
+STEALTH_ID = "FW-WSL-0992-A"
 
 
 CMD_ANNOUNCE_BOT = "botStatus"
