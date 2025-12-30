@@ -23,8 +23,9 @@ def on_message(client, userdata, msg):
         raw_res = decrypt_payload(encrypted_payload)
 
         if (packet.get("type") == "telemetry_status"):
-            log(f"...bot heartbeat triggered...")
-            # no response event
+            if(DEBUG_PRINT):
+                log(f"...bot heartbeat triggered...")
+                # no response event
             return
         full_msg = get_msg_from_chunks(raw_res)
         # If handle_fragment returns a string,
