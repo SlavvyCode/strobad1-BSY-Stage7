@@ -10,7 +10,7 @@ response_event = threading.Event()
 chunk_buffer = {}
 # This runs whenever the bot sends a response back to the 'sensors' topic
 
-DEBUG_PRINT = True
+DEBUG_PRINT = False
 TIMEOUT_DURATION = 90  # seconds
 
 def on_message(client, userdata, msg):
