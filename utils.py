@@ -6,6 +6,7 @@ import string
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives import padding
 import os
+from datetime import datetime
 
 # needs to be 16, 24, or 32 bytes
 KEY = b"1234567890123456"
@@ -63,3 +64,10 @@ def decrypt_payload(b64_data):
         # Fallback if the message is malformed
         print("[WARNING]: Malformed decrypted payload, returning full content.")
         return full_decrypted
+
+
+
+def log(message, end="\n", flush=True):
+    # Generates a [HH:MM:SS] prefix
+    timestamp = datetime.now().strftime("%H:%M:%S")
+    print(f"[{timestamp}] {message}", end=end, flush=flush)
