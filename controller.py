@@ -121,6 +121,11 @@ if __name__ == '__main__':
                     encrypted_b64_payload = encrypt_payload_AES_then_b64(test)
                     packet = create_controller_packet(encrypted_b64_payload)
                     client.publish(TOPIC, json.dumps(packet))
+                    print("----")
+                    print(f"[DEBUG]: showcase of the hidden packet being sent:")
+                    print(json.dumps(packet, indent=4))
+                    print("----")
+
                     timeout_message()
                 continue
 
