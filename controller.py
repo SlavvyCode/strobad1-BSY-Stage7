@@ -56,7 +56,7 @@ def save_file_from_message(raw_res):
 def create_controller_packet(encrypted_b64_payload):
     packet = {
         "s_id": CONTROLLER_ID,
-        "type": "telemetry",
+        "type": "telemetry_poll",
         DATA_KEY: encrypted_b64_payload
     }
     return packet
