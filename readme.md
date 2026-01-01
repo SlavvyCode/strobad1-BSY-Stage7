@@ -73,14 +73,6 @@ The bot supports all the mandatory functions:
 
 Besides these, the bot can also execute any other command sent by the controller.
 
-             CMD_ANNOUNCE_BOT, # botStatus, requirement 5.1
-                    CMD_WHO_IS_LOGGED_IN, # w, requirement 5.2
-                    CMD_LIST_FILES, # ls, requirement 5.3
-                    CMD_ID_HOST, # id, requirement 5.4
-                    CMD_COPY_FROM_BOT_TO_CONTROLLER + " fileToCopy.txt",  # requirement 5.5
-                    CMD_COPY_FROM_BOT_TO_CONTROLLER + " chunking_test.txt",  # check if chunking works for large files
-                    CMD_CHMOD_TEST_BINARY, # requirement 5.6
-                    CMD_RUN_TEST_BINARY # requirement 5.6
 List of commands supported by the bot which may be required for testing:
 - 'botStatus' : Announce bot status
 - 'w' : List logged-in users
