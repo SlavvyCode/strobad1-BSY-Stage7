@@ -43,13 +43,21 @@ python controller.py
 
 The protocol is designed to avoid detection by mimicking standard IoT telemetry.
 
+#### Internal Payload Format:
+Once decrypted, the command follows a simple space-delimited string format: 
+    `[ACTION] [ARGUMENT]`
+
+Responses are prefixed with 
+    `CHK:[CURRENT]:[TOTAL]:`
+to facilitate reassembly of large data streams.
+
 #### **Stealth Strategy**
 
 * **Traffic Mimicry:** All messages are wrapped in JSON objects using keys like `s_id`, `v_line` (voltage), and `telemetry_data` to look like power grid sensors.
 * **Encryption:** Payloads are encrypted using **AES-128-CBC**. Even if the traffic is intercepted, the commands and responses are unreadable.
 * **Uniform Packet Size:** The system uses a 512-byte fixed-size buffer. Short messages are padded with random "junk" characters before encryption so that every packet looks identical in size, preventing traffic analysis based on message length.
 * **Chunking:** Large files or long command outputs are broken into fragments (`CHK:XXX:XXX:DATA`) and sent with random delays (3-5 seconds) to avoid "burst" patterns that trigger network alarms.
-
+* **Heartbeats:** The bot sends periodic heartbeat messages disguised as telemetry polls to maintain the illusion of a legitimate sensor.
 #### **Packet Structure**
 
 | Field | Description |
