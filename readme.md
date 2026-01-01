@@ -80,7 +80,7 @@ List of commands supported by the bot which may be required for testing:
 - 'ls [directoryPath]' : List directory contents
 - 'id' : Show user identity
 - 'get [filePath]' : Move a file from bot to controller and save it locally
-- './[binaryFile]' : Execute a binary file
+- './[binaryFile]' : Execute a binary file - example: 'ps'
 - './[otherFileToExecute]' : Execute any other file (example: testFileToExecute.sh in root of project)
 
 ### 5. Extra
