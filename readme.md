@@ -1,7 +1,11 @@
 ## Project Documentation: MQTT C&C System
+
 student username: strobad1
+
 name: Adam Štrobl
+
 course BSY
+
 year: 2025/26
 
 This project implements a stealthy Command and Control (C&C) channel over MQTT, designed to blend into Industrial IoT traffic.
