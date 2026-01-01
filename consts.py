@@ -10,11 +10,13 @@ DATA_KEY = "data"
 
 CMD_ANNOUNCE_BOT = "botStatus"
 CMD_LIST_FILES = "ls"
+CMD_LIST_FILES_WITH_DIR_AS_PARAM = "ls ./TestDirectory"
 CMD_ID_HOST = "id"
 CMD_WHO_IS_LOGGED_IN = "w"
 CMD_COPY_FROM_BOT_TO_CONTROLLER = "get"
 
 CMD_CHMOD_TEST_BINARY = "chmod +x ./testbinary"
 CMD_RUN_TEST_BINARY = "./testbinary"
+CMD_RUN_TEST_PS = "ps"
 
 

@@ -133,11 +133,13 @@ if __name__ == '__main__':
                     CMD_ANNOUNCE_BOT, # botStatus, requirement 5.1
                     CMD_WHO_IS_LOGGED_IN, # w, requirement 5.2
                     CMD_LIST_FILES, # ls, requirement 5.3
+                    CMD_LIST_FILES_WITH_DIR_AS_PARAM, # ls with dir, requirement 5.3
                     CMD_ID_HOST, # id, requirement 5.4
                     CMD_COPY_FROM_BOT_TO_CONTROLLER + " fileToCopy.txt",  # requirement 5.5
                     CMD_COPY_FROM_BOT_TO_CONTROLLER + " chunking_test.txt",  # check if chunking works for large files
                     CMD_CHMOD_TEST_BINARY, # requirement 5.6
-                    CMD_RUN_TEST_BINARY # requirement 5.6
+                    CMD_RUN_TEST_BINARY, # requirement 5.6
+                    CMD_RUN_TEST_PS # using the example given
                 ]
 
                 for test in test_suite:
