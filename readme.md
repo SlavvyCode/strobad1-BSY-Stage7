@@ -72,3 +72,10 @@ The bot supports all the mandatory functions:
 6. **Binary Execution:** Can change permissions (`chmod +x`) and execute arbitrary binaries.
 
 Besides these, the bot can also execute any other command sent by the controller.
+
+
+### 5. Extra
+
+You may go into the bot.py and controller.py files to enable debug logging for more verbose output during execution.
+
+The variable to alter is 'DEBUG_PRINT' and lies at the top of both files. Set it to 'True' to enable additional debug logging.
